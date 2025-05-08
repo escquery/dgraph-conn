@@ -6,7 +6,7 @@ pub mod transaction;
 
 use std::fmt::Display;
 
-pub use api::{Latency, Metrics, Mutation, Response};
+pub use api::{Latency, Metrics, Mutation, Operation, Payload, Response, operation::DropOp};
 pub use client::{Client, EndpointAddresses};
 pub use error::{DgraphError, Result};
 pub use pool::{DgraphConn, DgraphPool};

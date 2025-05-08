@@ -2,9 +2,9 @@ use std::{collections::HashMap, fmt::Debug};
 use tonic::transport::Endpoint;
 
 use crate::{
-    api::{Mutation, Request as DgraphRequest, Response},
-    error::Result,
     DgraphConn,
+    api::{Mutation, Operation, Payload, Request as DgraphRequest, Response},
+    error::Result,
 };
 
 #[derive(Debug)]
@@ -126,6 +126,10 @@ impl Client {
         };
         self.do_request(req).await
     }
+
+    pub async fn alert(&mut self, op: Operation) -> Result<Payload> {
+        Ok(self.inner.alter(op).await?.into_inner())
+    }
 }
 
 impl Debug for Client {
@@ -142,7 +146,25 @@ mod tests {
 
     use super::*;
 
-    const DGRAPH_SERVER: &str = "http://127.0.0.1:9080";
+    const DGRAPH_SERVER: &str = "http://dgraph.local:9080";
+
+    #[tokio::test]
+    async fn test_schema() {
+        let op = Operation {
+            schema: "name: string @index(exact) @unique @upsert .".into(),
+            ..Default::default()
+        };
+        let server = EndpointAddresses::StaticStr(vec![DGRAPH_SERVER]);
+        let mut c = DgraphPool::new(server, 1)
+            .await
+            .unwrap()
+            .get()
+            .await
+            .unwrap();
+        let v = c.alert(op).await.unwrap();
+        println!("abc");
+        println!("{}", String::from_utf8(v.data).unwrap())
+    }
 
     #[tokio::test]
     async fn test_upsert() {
